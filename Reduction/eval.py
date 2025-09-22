@@ -311,8 +311,7 @@ def run_evaluation(model_path,
             clipped_tensor = output_tensor[start:-start]
             clipped_tensor = output_tensor[start:-start]
             subject = int(re.findall(r'\d+', model_name)[0])
-            print("model_name", model_name)
-            gt_path = fr"/HPS/antiderivative_project/work/data/convolution/motion/subject_{subject}_motion1d_order_{order}_minimal_{np.round(1/kernel_scale, 1)}_samples_100000.npy"
+            gt_path = fr"../convolution_mc/motion/subject_{subject}_motion1d_order_{order}_minimal_{np.round(1/kernel_scale, 1)}_samples_100000.npy"
             print("gt", gt_path)
             gt_np = np.load(gt_path, allow_pickle=True).item()['res']
             
@@ -321,7 +320,6 @@ def run_evaluation(model_path,
             mse_log[(order, round(1 / kernel_scale, 1))].append(mse)
 
 
-            # Save plot
             plt.figure()
             plt.plot(gt_np[start:-start, 20], label="gt")
             plt.plot(output_tensor[start:-start, 20], label="pred")
@@ -342,7 +340,7 @@ def run_evaluation(model_path,
             start = int(padding_fraction * 1024)
             clipped_pred = output_tensor[start:-start, start:-start, :]
             name = (re.findall(r'\d+', model_name)[0])
-            gt_path = fr"/HPS/antiderivative_project/work/data/convolution/image_mc_order={order}/{name}_2d_order_{order}_minimal_{np.round(1/kernel_scale, 1)}_samples_200000.npy"
+            gt_path = fr"../convolution_mc/image_mc_order={order}/{name}_2d_order_{order}_minimal_{np.round(1/kernel_scale, 1)}_samples_200000.npy"
             gt_np = np.load(gt_path, allow_pickle=True).item()['res']
             gt_crop = gt_np[start:-start, start:-start, :]
 
@@ -378,7 +376,7 @@ def run_evaluation(model_path,
             clipped_pred = output_tensor[start:-start, start:-start, start:-start]
 
             name = model_name.split("_order")[0][10:]
-            gt_path = fr"/HPS/antiderivative_project/work/data/convolution/geometry_mc_order={order}/{name}_3d_order_{order}_{np.round(1/kernel_scale, 1)}_samples_20000.npy"
+            gt_path = fr"../convolution_mc/geometry_mc_order={order}/{name}_3d_order_{order}_{np.round(1/kernel_scale, 1)}_samples_20000.npy"
             gt_np = np.load(gt_path, allow_pickle=True).item()['res']
             gt_crop = gt_np[start:-start, start:-start, start:-start]
 

@@ -97,8 +97,8 @@ def evaluate_model(net_path, func_name, order, size=1024):
 
 
 if __name__ == "__main__":
-    net_path = "/HPS/antiderivative_project/work/Autoint/experiments/results_2d/Autoint_ackley_order=1/current.pth"
     func_name = "ackley"
+    net_path = f"../models/Autoint/2d/{func_name}_order=1.pth"
     order = 1
     pred, gt = evaluate_model(net_path, func_name, order)
     fig, axes = plt.subplots(1, 2, figsize=(8, 4))

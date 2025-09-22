@@ -90,8 +90,8 @@ def plot_sdf_slice(pred, gt, z_idx, save_name):
 
 
 def main():
-    mesh_dir = "/HPS/antiderivative_project/work/data/geometry"
-    ckpt_root = "/HPS/antiderivative_project/work/Autoint/experiments/results_3d"
+    mesh_dir = "../data/geometry"
+    ckpt_root = "../models/Autoint/3d"
     eval_dir = "evaluation_3d_updated"
     plot_dir = os.path.join(eval_dir, "plots")
     mesh_out_dir = os.path.join(eval_dir, "meshes")
@@ -110,7 +110,7 @@ def main():
         for order in [1, 2]:
             print(f"File: {base_name}, Order: {order}", flush=True)
             st = time.time()
-            ckpt_path = os.path.join(ckpt_root, f"Autoint_{base_name}_order={order}", "current.pth")
+            ckpt_path = os.path.join(ckpt_root, f"{base_name}_order={order}.pth")
             if not os.path.isfile(ckpt_path):
                 print(f"Skipping missing checkpoint: {ckpt_path}")
                 continue
@@ -134,8 +134,6 @@ def main():
             print(line.strip())
             log_lines.append(line)
             print(time.time() - st, "elapsed", flush=True)
-        #     break
-        # break
 
     mse_log_path = os.path.join(eval_dir, "mse_results.txt")
     with open(mse_log_path, 'a') as f:

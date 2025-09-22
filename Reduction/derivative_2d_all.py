@@ -36,7 +36,6 @@ def nth_derivative(model, x, order):
             x[:, 0:1], x[:, 1:2]
         ).reshape(-1, 3)
     elif order == 2:
-        # Efficient inner function with only one model call
         def composed_model(a, b):
             ab = torch.cat([a, b], dim=-1)
             out = model(ab)
@@ -51,14 +50,6 @@ def nth_derivative(model, x, order):
                 ), argnums=1
             )
         )(x[:, 0:1], x[:, 1:2]).reshape(-1, 3)
-    elif order == 3:
-        return vmap(jacrev(jacfwd(jacrev(jacfwd(jacrev(jacfwd(
-            lambda a, b: model(torch.cat([a, b], -1)), argnums=0), argnums=1),
-            argnums=0), argnums=1), argnums=0), argnums=1))(
-            x[:, 0:1], x[:, 1:2]
-        ).reshape(-1, 3)
-    else:
-        raise ValueError("Only orders 1, 2, 3 supported.")
 
 
 
@@ -109,8 +100,8 @@ def evaluate_model(net_path, image_path, order, lpips_fn):
 
 
 def main():
-    image_dir = "/HPS/antiderivative_project/work/data/images"
-    ckpt_root = "/HPS/antiderivative_project/work/Reduction/experiments/results_2d"
+    image_dir = "../data/images"
+    ckpt_root = "../models/Reduction/2d"
     eval_dir = "evaluation_2d"
     plot_dir = os.path.join(eval_dir, "results")
     os.makedirs(plot_dir, exist_ok=True)
@@ -127,7 +118,7 @@ def main():
         img_path = os.path.join(image_dir, img_file)
         print(f"Image: {base_name}.png")
         for order in [2]:
-            ckpt_path = os.path.join(ckpt_root, f"Reduction_{base_name}_order={order}", "current.pth")
+            ckpt_path = os.path.join(ckpt_root, f"Reduction_{base_name}_order={order}.pth")
             if not os.path.exists(ckpt_path):
                 print(f"Missing: {ckpt_path}")
                 continue
@@ -150,22 +141,22 @@ def main():
             Image.fromarray(pred_uint8).save(os.path.join(plot_dir, f"{base_name}_order{order}.png"))
 
             # # Save plot
-            # fig, axes = plt.subplots(1, 2, figsize=(6, 3))
-            # axes[0].imshow(pred)
-            # axes[0].set_title(f"Reduction AD (order={order})")
-            # axes[1].imshow(gt)
-            # axes[1].set_title("Ground Truth")
-            # for ax in axes:
-            #     ax.axis("off")
-            # plt.tight_layout()
-            # plt.savefig(os.path.join(plot_dir, f"{base_name}_order{order}.png"))
-            # plt.close()
+            fig, axes = plt.subplots(1, 2, figsize=(6, 3))
+            axes[0].imshow(pred)
+            axes[0].set_title(f"Reduction AD (order={order})")
+            axes[1].imshow(gt)
+            axes[1].set_title("Ground Truth")
+            for ax in axes:
+                ax.axis("off")
+            plt.tight_layout()
+            plt.savefig(os.path.join(plot_dir, f"{base_name}_order{order}.png"))
+            plt.close()
 
-            # log = (f"{base_name}, order={order}, "
-            #        f"MSE={mse:.8f}, PSNR={psnr:.8f}, "
-            #        f"SSIM={ssim:.8f}, LPIPS={lpips_val:.8f}")
-            # print(log)
-            # all_logs.append(log + "\n")
+            log = (f"{base_name}, order={order}, "
+                   f"MSE={mse:.8f}, PSNR={psnr:.8f}, "
+                   f"SSIM={ssim:.8f}, LPIPS={lpips_val:.8f}")
+            print(log)
+            all_logs.append(log + "\n")
 
     # Write once at the end
     mse_log_path = os.path.join(eval_dir, "mse_results.txt")

@@ -37,12 +37,6 @@ def nth_derivative(model, x, order, dim=1):
         return vmap(jacrev(jacfwd(jacrev(jacfwd(reduced_derivative, argnums=0), argnums=1), argnums=0), argnums=1))(
             x[:, 0:1], x[:, 1:2]
         ).reshape(-1, dim)
-    elif order == 3:
-        return vmap(jacrev(jacfwd(jacrev(jacfwd(jacrev(jacfwd(lambda a, b: model(torch.cat([a, b], -1)), argnums=0), argnums=1), argnums=0), argnums=1), argnums=0), argnums=1))(
-            x[:, 0:1], x[:, 1:2]
-        ).reshape(-1, dim)
-    else:
-        raise ValueError("Only orders 1, 2, 3 supported")
 
 
 def chunked_derivative(model, coords, order, chunk_size=10000, dim=1):
@@ -111,13 +105,12 @@ def evaluate_model(net_path, func_name, order, size=1024):
 
 
 if __name__ == "__main__":
-    net_path = "/HPS/antiderivative_project/work/Reduction/experiments/results_2d/Reduction_hr_order=2/current.pth"
     func_name = "hr"  # or "gm", "hr"
+    net_path = f"../models/Reduction/2d/{func_name}_order=2.pth"
     order = 2
 
     pred, gt = evaluate_model(net_path, func_name, order)
 
-    # --- Plot ---
     fig, axes = plt.subplots(1, 2, figsize=(8, 4))
     axes[0].imshow(pred, cmap='viridis')
     axes[0].set_title("Predicted")

@@ -56,7 +56,7 @@ def get_ground_truth(func_name, x_vals):
 
 
 def evaluate_all():
-    root_model_dir = "/HPS/antiderivative_project/work/Autoint/experiments/results_1d"
+    root_model_dir = "../models/1d"
     save_dir = "plots_eval_analytic"
     os.makedirs(save_dir, exist_ok=True)
 
@@ -69,7 +69,7 @@ def evaluate_all():
     for func in functions:
         for order in orders:
             print(f"\nEvaluating {func} | Order {order}")
-            model_path = os.path.join(root_model_dir, f"Autoint_{func}_order={order}", "current.pth")
+            model_path = os.path.join(root_model_dir, f"{func}_order={order}.pth")
             if not os.path.exists(model_path):
                 print(f"Model not found at {model_path}")
                 continue

@@ -125,7 +125,7 @@ def plot_sdf_slice(pred, gt, z_idx, save_name):
 
 if __name__ == "__main__":
     func_name = "hr"  # or "gm", "hr"
-    net_path = f"/HPS/antiderivative_project/work/Reduction/experiments/results_3d/Reduction_{func_name}_order=2/current.pth"
+    net_path = f"../models/Reduction/{func_name}_order=2.pth"
     order = 2
     eval_dir = "evaluation_3d"
     plot_dir = os.path.join(eval_dir, "plots")

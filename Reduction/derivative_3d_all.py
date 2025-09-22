@@ -110,8 +110,8 @@ def plot_sdf_slice(pred, gt, z_idx, save_name):
 
 
 def main():
-    mesh_dir = "/HPS/antiderivative_project/work/data/geometry"
-    ckpt_root = "/HPS/antiderivative_project/work/Reduction/experiments/results_3d"
+    mesh_dir = "../data/geometry"
+    ckpt_root = "../models/Reduction/3d"
     eval_dir = "evaluation_3d_updated"
     plot_dir = os.path.join(eval_dir, "plots")
     mesh_out_dir = os.path.join(eval_dir, "meshes")
@@ -129,7 +129,7 @@ def main():
 
             for order in [2]:
                 st = time.time()
-                ckpt_path = os.path.join(ckpt_root, f"Reduction_{base_name}_order={order}", "current.pth")
+                ckpt_path = os.path.join(ckpt_root, f"Reduction_{base_name}_order={order}.pth")
                 if not os.path.isfile(ckpt_path):
                     print(f"Skipping missing checkpoint: {ckpt_path}")
                     continue
