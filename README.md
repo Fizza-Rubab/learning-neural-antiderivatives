@@ -18,6 +18,7 @@ Download and extract the [data package](https://neural-antiderivatives.mpi-inf.m
 The main directories are:  
 - `motion/` — motion capture sequences.  
 - `images/` — natural RGB images.  
+- `envmap/` — environment map HDR images.  
 - `geometry/` — signed distance functions.  
 - `fd_blurred_gts/` — Monte Carlo ground truths for finite-difference (blurred supervision).  
 - `dog_blurred_gts/` — Monte Carlo ground truths for smooth operators (blurred supervision).  
