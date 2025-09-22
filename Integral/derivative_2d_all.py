@@ -91,8 +91,8 @@ def evaluate_model(net_path, image_path, order, lpips_fn):
 
 
 def main():
-    image_dir = "/HPS/antiderivative_project/work/data/images"
-    ckpt_root = "/HPS/antiderivative_project/work/NFC-MC/experiments/results_2d"
+    image_dir = "../data/images"
+    ckpt_root = "../models/Integral/2d"
     eval_dir = "evaluation_2d"
     plot_dir = os.path.join(eval_dir, "results")
     os.makedirs(plot_dir, exist_ok=True)
@@ -108,8 +108,8 @@ def main():
         base_name = os.path.splitext(img_file)[0]
         img_path = os.path.join(image_dir, img_file)
         print(f"Image: {base_name}.png")
-        for order in [2]:
-            ckpt_path = os.path.join(ckpt_root, f"NFC-MC_{base_name}_order={order}", "current.pth")
+        for order in [1, 2]:
+            ckpt_path = os.path.join(ckpt_root, f"{base_name}_order={order}.pth")
             if not os.path.exists(ckpt_path):
                 print(f"Missing: {ckpt_path}")
                 continue
@@ -132,26 +132,26 @@ def main():
             Image.fromarray(pred_uint8).save(os.path.join(plot_dir, f"{base_name}_order{order}.png"))
 
 
-    #         fig, axes = plt.subplots(1, 2, figsize=(6, 3))
-    #         axes[0].imshow(pred)
-    #         axes[0].set_title(f"Autoint AD (order={order})")
-    #         axes[1].imshow(gt)
-    #         axes[1].set_title("Ground Truth")
-    #         for ax in axes:
-    #             ax.axis("off")
-    #         plt.tight_layout()
-    #         plt.savefig(os.path.join(plot_dir, f"{base_name}_order{order}.png"))
-    #         plt.close()
+            fig, axes = plt.subplots(1, 2, figsize=(6, 3))
+            axes[0].imshow(pred)
+            axes[0].set_title(f"Autoint AD (order={order})")
+            axes[1].imshow(gt)
+            axes[1].set_title("Ground Truth")
+            for ax in axes:
+                ax.axis("off")
+            plt.tight_layout()
+            plt.savefig(os.path.join(plot_dir, f"{base_name}_order{order}.png"))
+            plt.close()
 
-    #         log = (f"{base_name}, order={order}, "
-    #                f"MSE={mse:.8f}, PSNR={psnr:.8f}, "
-    #                f"SSIM={ssim:.8f}, LPIPS={lpips_val:.8f}")
-    #         print(log)
-    #         all_logs.append(log + "\n")
+            log = (f"{base_name}, order={order}, "
+                   f"MSE={mse:.8f}, PSNR={psnr:.8f}, "
+                   f"SSIM={ssim:.8f}, LPIPS={lpips_val:.8f}")
+            print(log)
+            all_logs.append(log + "\n")
 
-    # mse_log_path = os.path.join(eval_dir, "mse_results.txt")
-    # with open(mse_log_path, 'a') as f:
-    #     f.writelines(all_logs)
+    mse_log_path = os.path.join(eval_dir, "mse_results.txt")
+    with open(mse_log_path, 'a') as f:
+        f.writelines(all_logs)
 
 
 if __name__ == "__main__":

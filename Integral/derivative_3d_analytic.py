@@ -100,7 +100,7 @@ def plot_sdf_slice(pred, gt, z_idx, save_name):
 if __name__ == "__main__":
     func_name = "ackley" 
     order = 2
-    net_path = f"/HPS/antiderivative_project/work/NFC-MC/experiments/results_3d/NFC-MC_{func_name}_order={order}/current.pth"
+    net_path = f"../models/Integral/3d/{func_name}_order={order}.pth"
     eval_dir = "evaluation_3d"
     plot_dir = os.path.join(eval_dir, "plots")
     mesh_out_dir = os.path.join(eval_dir, "meshes")

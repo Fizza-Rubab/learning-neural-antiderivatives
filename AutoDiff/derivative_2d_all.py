@@ -92,7 +92,7 @@ def evaluate_model(net_path, image_path, order, lpips_fn):
 
 def main():
     image_dir = "../data/images"
-    ckpt_root = "../models/Autoint/2d"
+    ckpt_root = "../models/AutoDiff/2d"
     eval_dir = "evaluation_2d"
     plot_dir = os.path.join(eval_dir, "results")
     os.makedirs(plot_dir, exist_ok=True)
@@ -122,7 +122,7 @@ def main():
 
             fig, axes = plt.subplots(1, 2, figsize=(6, 3))
             axes[0].imshow(pred)
-            axes[0].set_title(f"Autoint AD (order={order})")
+            axes[0].set_title(f"AutoDiff AD (order={order})")
             axes[1].imshow(gt)
             axes[1].set_title("Ground Truth")
             for ax in axes:

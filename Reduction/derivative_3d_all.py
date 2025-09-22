@@ -129,7 +129,7 @@ def main():
 
             for order in [2]:
                 st = time.time()
-                ckpt_path = os.path.join(ckpt_root, f"Reduction_{base_name}_order={order}.pth")
+                ckpt_path = os.path.join(ckpt_root, f"{base_name}_order={order}.pth")
                 if not os.path.isfile(ckpt_path):
                     print(f"Skipping missing checkpoint: {ckpt_path}")
                     continue

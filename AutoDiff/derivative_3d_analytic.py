@@ -99,7 +99,7 @@ def plot_sdf_slice(pred, gt, z_idx, save_name):
 
 if __name__ == "__main__":
     func_name = "hr" 
-    net_path = f"../models/Autoint/3d/{func_name}_order=2.pth"
+    net_path = f"../models/AutoDiff/3d/{func_name}_order=1.pth"
     order = 1
     eval_dir = "evaluation_3d"
     plot_dir = os.path.join(eval_dir, "plots")

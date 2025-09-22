@@ -118,7 +118,7 @@ def main():
         img_path = os.path.join(image_dir, img_file)
         print(f"Image: {base_name}.png")
         for order in [2]:
-            ckpt_path = os.path.join(ckpt_root, f"Reduction_{base_name}_order={order}.pth")
+            ckpt_path = os.path.join(ckpt_root, f"{base_name}_order={order}.pth")
             if not os.path.exists(ckpt_path):
                 print(f"Missing: {ckpt_path}")
                 continue

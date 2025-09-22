@@ -32,7 +32,6 @@ def plot_sdf_slice(pred, gt, z_idx, save_name):
     plt.savefig(save_name)
     plt.close()
 
-
 def scale_image(image):
     min_value = np.min(image)
     max_value = np.max(image)
@@ -125,7 +124,7 @@ def load_network(net_path,
     elif modality == 1:
         coords_x = np.linspace(-1, 1, shape[0], endpoint=True)
         coords_y = np.linspace(-1, 1, shape[1], endpoint=True)
-        xy_grid = np.stack(np.meshgrid(coords_x, coords_y, indexing='ij'), -1)
+        xy_grid = np.stack(np.meshgrid(coords_y, coords_x, indexing='xy'), -1)
         convolution_tensor = np.zeros((xy_grid.shape[0], xy_grid.shape[1], 3))
     else:
         coords_x = np.linspace(-1, 1, shape[0], endpoint=True)
@@ -248,37 +247,6 @@ def evaluate(kern_path,
     return convolution_tensor
 
 
-def normalize_array(x, out_min=0, out_max=1):
-    in_min, in_max = np.min(x), np.max(x)
-    return (out_max - out_min) / (in_max - in_min) * (x - in_min) + out_min
-
-def read_pose(file_path, normalize=True, num_frames=5000):
-    with open(file_path, 'r') as f:
-        lines = f.readlines()
-
-    data_lines = [line.strip() for line in lines if line.strip() and not line.startswith("Skeletool")]
-
-    pose_list = []
-    for line in data_lines:
-        parts = line.split()
-        coords = list(map(float, parts[1:]))
-        frame_pose = np.array(coords).reshape(-1, 3)
-        pose_list.append(frame_pose)
-
-    pose_array = np.stack(pose_list)  
-    total_frames = pose_array.shape[0]
-    if num_frames is not None and num_frames < total_frames:
-        start = (total_frames - num_frames) // 2
-        pose_array = pose_array[start:start + num_frames]
-    elif num_frames is not None and num_frames > total_frames:
-        raise ValueError(f"Requested {num_frames} frames, but only {total_frames} available.")
-
-    if normalize:
-        pose_array = normalize_array(pose_array)
-    print(pose_array.shape)
-    return pose_array
-
-
 @click.command()
 @click.option("--model_path", default='', help="path to data")
 @click.option("--kernel_path", default='', help="path to kernel")
@@ -305,7 +273,6 @@ def run_evaluation(model_path,
     model_name = os.path.basename(os.path.dirname(model_path))
     create_or_recreate_folders(save_path)
     kernel_scales = [1/0.1, 1/0.2, 1/0.3]
-    k = {}
     for kernel_scale in kernel_scales:
         path = model_path
         kern_path = kernel_path
@@ -344,16 +311,10 @@ def run_evaluation(model_path,
             print("gt", gt_path)
             gt_np = np.load(gt_path, allow_pickle=True).item()['res']
             
-            gt_abs = fr"../data/motion/subject_{subject}.txt"
-            print("gt", gt_abs)
-            gt_abs = read_pose(gt_abs)
-            
             mse = ((gt_np[start:-start, :] - output_tensor[start:-start, :]) ** 2).mean()
             print("MSE", mse, "Order", order)
             mse_log[(order, round(1 / kernel_scale, 1))].append(mse)
-            k[str(np.round(1/kernel_scale, 1))] = output_tensor[start:-start, 20]
-            if kernel_scale==(1/0.1):
-                k["gt"] = gt_abs[start:-start, 20]
+
 
             # Save plot
             plt.figure()
@@ -406,10 +367,13 @@ def run_evaluation(model_path,
         if modality == 2:
             padding_fraction = 0.3
             start = int(padding_fraction * 256)
+            
             clipped_pred = output_tensor[start:-start, start:-start, start:-start]
-
-            name = model_name.split("_order")[0][8:]
+            if order == 0:
+                clipped_pred *=-1
+            name = model_name.split("_order")[0][7:]
             gt_path = fr"../convolution_mc/geometry_mc_order={order}/{name}_3d_order_{order}_{np.round(1/kernel_scale, 1)}_samples_20000.npy"
+            print(gt_path)
             gt_np = np.load(gt_path, allow_pickle=True).item()['res']
             gt_crop = gt_np[start:-start, start:-start, start:-start]
 
@@ -417,6 +381,7 @@ def run_evaluation(model_path,
             print(f"MSE (SDF): {mse:.8f}")
             mesh_name = f"{model_name}_order{order}_scale{np.round(1/kernel_scale, 1)}.ply"
             plot_sdf_slice(clipped_pred, gt_crop, z_idx=clipped_pred.shape[0] // 2, save_name=os.path.join(save_path, mesh_name[:-3]+"png"))
+            
             try:
                 save_mesh(clipped_pred, save_path, mesh_name)
                 # save_mesh(clipped_pred, save_path, 'gt_' + mesh_name)
@@ -428,9 +393,10 @@ def run_evaluation(model_path,
                 f.write(f"{model_name}, kernel_scale={1/kernel_scale:.2f}, order={order}, MSE={mse:.8f}\n")
             print(f"Appended results to {summary_path}")
 
+        # Videos
         elif modality == 3:
             save_frames(output_tensor, save_path)
-        
+
 
 if __name__ == '__main__':
     run_evaluation()

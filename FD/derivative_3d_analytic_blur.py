@@ -30,11 +30,11 @@ def get_ground_truth_3d(func_name, coords):
 
 
 def nth_derivative(model, x, order):
-    if order == 1:
+    if order == 0:
         return vmap(jacfwd(jacrev(jacfwd(lambda a, b, c: model(torch.cat([a, b, c], -1)), argnums=0), argnums=1), argnums=2))(
             x[:, 0:1], x[:, 1:2], x[:, 2:3]
         ).reshape(-1, 1)
-    elif order == 2:
+    elif order == 1:
         return vmap(jacfwd(jacrev(jacfwd(jacfwd(jacrev(jacfwd(lambda a, b, c: model(torch.cat([a, b, c], -1)), argnums=0), argnums=1), argnums=2), argnums=0), argnums=1), argnums=2))(
                 x[:, 0:1], x[:, 1:2], x[:, 2:3]
             ).reshape(-1, 1)
@@ -67,21 +67,20 @@ def plot_sdf_slice(pred, gt, z_idx=None, save_path="sdf_slice.png"):
     plt.savefig(save_path)
     plt.close()
 
-
 def main():
-    func_names = ["hr", "gm", "ackley"]   # Add more if needed
-    size = 64  # Grid resolution per axis
-    orders = [1, 2]
+    func_names = [ "gm", "hr", "ackley"]
+    size = 64
+    orders = [0, 1]
     chunk_size = 4096
-    ckpt_root = "../models/FD-Noblur/3d"
+    ckpt_root = "../models/FD-Blur/3d"
     plot_dir = "eval_3d_analytic_plots"
     os.makedirs(plot_dir, exist_ok=True)
 
-    results_log = []  # ← Accumulate MSE logs here
-
+    results_log = [] 
     for func_name in func_names:
         for order in orders:
-            ckpt_path = os.path.join(ckpt_root, f"{func_name}_order={order-1}.pth")
+            ckpt_path = os.path.join(ckpt_root, f"{func_name}_order={order}.pth")
+            print(func_name, order)
             if not os.path.exists(ckpt_path):
                 print(f"Checkpoint not found: {ckpt_path}")
                 continue
@@ -96,8 +95,11 @@ def main():
             model.eval()
 
             coords = build_3d_grid(size, size, size)
-            pred = -chunked_derivative(model, coords, order, chunk_size).reshape(size, size, size)
+            
+            pred = chunked_derivative(model, coords, order, chunk_size).reshape(size, size, size)
 
+            if order==1:
+                pred*=-1
             x_np = coords.detach().cpu().numpy()
             gt = get_ground_truth_3d(func_name, x_np).reshape(size, size, size)
 
@@ -109,12 +111,11 @@ def main():
             slice_path = os.path.join(plot_dir, f"{func_name}_order{order}.png")
             plot_sdf_slice(pred, gt, save_path=slice_path)
 
-    # Write MSE summary to a text file
+    # Write summary to file
     log_file_path = os.path.join(plot_dir, "eval_summary.txt")
     with open(log_file_path, "w") as f:
         f.write("\n".join(results_log))
     print(f"Saved summary to {log_file_path}")
-
 
 if __name__ == "__main__":
     main()

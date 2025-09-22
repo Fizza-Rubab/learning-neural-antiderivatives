@@ -91,7 +91,7 @@ def plot_sdf_slice(pred, gt, z_idx, save_name):
 
 def main():
     mesh_dir = "../data/geometry"
-    ckpt_root = "../models/Autoint/3d"
+    ckpt_root = "../models/AutoDiff/3d"
     eval_dir = "evaluation_3d_updated"
     plot_dir = os.path.join(eval_dir, "plots")
     mesh_out_dir = os.path.join(eval_dir, "meshes")

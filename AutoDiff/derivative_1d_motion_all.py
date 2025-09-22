@@ -83,7 +83,7 @@ def evaluate_model(net_path, pose_path, order):
 
 def main():
     pose_dir = "../data/motion"
-    ckpt_root = "../models/Autoint/1d"
+    ckpt_root = "../models/AutoDiff/1d"
     eval_dir = "evaluation_1d"
     plot_dir = os.path.join(eval_dir, "plots")
     os.makedirs(plot_dir, exist_ok=True)

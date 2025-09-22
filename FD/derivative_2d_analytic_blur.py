@@ -78,10 +78,9 @@ def evaluate_model(net_path, func_name, order, size=1024):
     pred = chunked_derivative(model, coords, order, chunk_size=4096, dim=1).reshape(size, size)
     print(pred.min(), pred.max())
     mse = np.mean((pred - gt) ** 2)
-    
-    gt = np.clip(gt, 0., 1.)
-    pred = np.clip(pred, 0., 1.)
 
+    pred = np.clip(pred, 0., 1.)
+    gt = np.clip(gt, 0., 1.)
     psnr = compare_psnr(gt, pred, data_range=1.0)
     ssim = compare_ssim(gt, pred, data_range=1.0)
 
@@ -102,7 +101,7 @@ if __name__ == "__main__":
     for func_name in [ "hr", "gm", "ackley"]:
         for order in [0, 1]:
             print(func_name, order)
-            net_path = f"../models/FD-Noblur/2d/_{func_name}_order={order}.pth"
+            net_path = f"../models/FD-Blur/2d/{func_name}_order={order}.pth"
             pred, gt = evaluate_model(net_path, func_name, order)
 
             # --- Plot ---

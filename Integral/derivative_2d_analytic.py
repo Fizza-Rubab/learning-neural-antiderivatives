@@ -101,9 +101,9 @@ def evaluate_model(net_path, func_name, order, size=1024):
 
 if __name__ == "__main__":
     for func_name in [ "ackley", "gm", "hr"]:
-        for order in [2]:
+        for order in [1, 2]:
             print(func_name, order)
-            net_path = f"/HPS/antiderivative_project/work/NFC-MC/experiments/results_2d/NFC-MC_{func_name}_order={order}/current.pth"
+            net_path = f"../models/Integral/2d/{func_name}_order={order}.pth"
             pred, gt = evaluate_model(net_path, func_name, order)
 
             # --- Plot ---

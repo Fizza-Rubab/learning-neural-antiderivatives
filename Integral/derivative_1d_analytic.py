@@ -59,7 +59,7 @@ def get_ground_truth(func_name, x_vals):
 # ---------- Main Evaluation ----------
 
 def evaluate_all():
-    root_model_dir = "/HPS/antiderivative_project/work/NFC-MC/experiments/results_1d"
+    root_model_dir = "../models/Integral/1d"
     save_dir = "plots_eval_analytic"
     os.makedirs(save_dir, exist_ok=True)
 
@@ -72,9 +72,9 @@ def evaluate_all():
     for func in functions:
         for order in orders:
             print(f"\nEvaluating {func} | Order {order}")
-            model_path = os.path.join(root_model_dir, f"NFC-MC_{func}_order={order}", "current.pth")
+            model_path = os.path.join(root_model_dir, f"{func}_order={order}.pth")
             if not os.path.exists(model_path):
-                print(f"  ❌ Model not found at {model_path}")
+                print(f"Model not found at {model_path}")
                 continue
 
             model = load_model(model_path)
@@ -82,7 +82,7 @@ def evaluate_all():
             gt = get_ground_truth(func, x_np).reshape(-1, 1)
 
             mse = np.mean((pred - gt) ** 2)
-            print(f"  ✅ MSE: {mse:.9f}")
+            print(f"MSE: {mse:.9f}")
 
             # # --- Plot ---
             plt.figure(figsize=(10, 4))

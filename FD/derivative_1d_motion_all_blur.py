@@ -83,7 +83,7 @@ def evaluate_model(net_path, pose_path, order):
 
 def main():
     pose_dir = "../data/motion"
-    ckpt_root = "../models/Integral/1d"
+    ckpt_root = "../models/FD-Blur/1d"
     eval_dir = "evaluation_1d"
     plot_dir = os.path.join(eval_dir, "plots")
     os.makedirs(plot_dir, exist_ok=True)
@@ -99,7 +99,7 @@ def main():
 
             base_name = os.path.splitext(fname)[0]
             pose_path = os.path.join(pose_dir, fname)
-            ckpt_path = os.path.join(ckpt_root, f"{base_name}_order={order}.pth")
+            ckpt_path = os.path.join(ckpt_root, f"{base_name}_motion1d_order_{order-1}_minimal_0.04_samples_100000.npy_order={order-1}.pth")
 
             if not os.path.exists(ckpt_path):
                 print(f"Skipping missing checkpoint: {ckpt_path}")
@@ -128,7 +128,6 @@ def main():
             plt.savefig(plot_path)
             plt.close()
 
-            
             npy_dir = os.path.join(eval_dir, "npys")
             os.makedirs(npy_dir, exist_ok=True)	
             npy_file = os.path.join(npy_dir, f"{base_name}_order{order}.npy")

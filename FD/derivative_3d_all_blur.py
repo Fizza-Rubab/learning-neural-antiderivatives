@@ -7,6 +7,7 @@ from model import CoordinateNet_ordinary as CoordinateNet
 from torch.func import vmap, jacfwd, jacrev
 import time
 
+
 def pad_sdf(sdf_volume, pad_fraction=0.3, constant_value=1.0):
     depth, height, width = sdf_volume.shape[:3]
     pad_depth = int(depth * pad_fraction)
@@ -96,7 +97,7 @@ def plot_sdf_slice(pred, gt, z_idx=None, save_path="sdf_slice.png"):
 
 def main():
     mesh_dir = "../data/geometry"
-    ckpt_root = "../models/FD-Noblur/3d"
+    ckpt_root = "../models/FD-Blur/3d"
     eval_dir = "evaluation_3d_updated"
     plot_dir = os.path.join(eval_dir, "plots")
     os.makedirs(plot_dir, exist_ok=True)
@@ -113,13 +114,13 @@ def main():
             for order in [0, 1]:  # Only orders 0 and 1
                 print(f"File: {base_name}, Order: {order}", flush=True)
                 st = time.time()
-                ckpt_path = os.path.join(ckpt_root, f"{base_name}_order={order}_scale=25.pth")
+                ckpt_path = os.path.join(ckpt_root, f"{base_name}_3d_order_{order}_0.04_samples_10000_order={order}.pth")
                 if not os.path.exists(ckpt_path):
                     print(f"Skipping missing checkpoint: {ckpt_path}")
                     continue
 
                 try:
-                    pred, gt, mse = evaluate_model_sdf(ckpt_path, mesh_path, order)
+                    pred, gt, mse = evaluate_model_sdf(ckpt_path, mesh_path, order, chunk_size=4096)
                 except Exception as e:
                     print(f"Error in {base_name} order {order}: {e}")
                     continue
@@ -129,6 +130,7 @@ def main():
 
                 os.makedirs(os.path.join(plot_dir, f"{base_name}_order{order}"), exist_ok=True)
                 save_mesh(pred, os.path.join(plot_dir, f"{base_name}_order{order}"))
+
                 slice_path = os.path.join(plot_dir, f"{base_name}_order{order}.png")
                 plot_sdf_slice(pred, gt, save_path=slice_path)
                 print(time.time() - st, "elapsed", flush=True)

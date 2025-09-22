@@ -86,8 +86,8 @@ def plot_sdf_slice(pred, gt, z_idx, save_name):
 
 
 def main():
-    mesh_dir = "/HPS/antiderivative_project/work/data/geometry"
-    ckpt_root = "/HPS/antiderivative_project/work/NFC-MC/experiments/results_3d"
+    mesh_dir = "../data/geometry"
+    ckpt_root = "../models/Integral/3d"
     eval_dir = "evaluation_3d_updated"
     plot_dir = os.path.join(eval_dir, "plots")
     mesh_out_dir = os.path.join(eval_dir, "meshes")
@@ -103,8 +103,8 @@ def main():
             base_name = os.path.splitext(mesh_file)[0]
             mesh_path = os.path.join(mesh_dir, mesh_file)
 
-            for order in [2]:
-                ckpt_path = os.path.join(ckpt_root, f"NFC-MC_{base_name}_order={order}", "current.pth")
+            for order in [1, 2]:
+                ckpt_path = os.path.join(ckpt_root, f"{base_name}_order={order}.pth")
                 if not os.path.isfile(ckpt_path):
                     print(f"Skipping missing checkpoint: {ckpt_path}")
                     continue

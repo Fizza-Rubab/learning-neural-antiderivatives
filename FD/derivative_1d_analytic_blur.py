@@ -8,12 +8,14 @@ from torch.func import vmap, jacfwd, jacrev
 from model import CoordinateNet_ordinary as CoordinateNet
 from utilities import ackley_1d, gaussian_mixture_1d, mixture_hyperrectangles
 
+# ---------- Utilities ----------
+
 def nth_derivative(model, x, order):
-    if order == 1:
+    if order == 0:
         return vmap(jacfwd(model))(x)
-    elif order == 2:
+    elif order == 1:
         return vmap(jacrev(jacfwd(model)))(x)
-    elif order == 3:
+    elif order == 2:
         return vmap(jacfwd(jacrev(jacfwd(model))))(x)
     else:
         raise ValueError("Only orders 0–2 are supported")
@@ -54,14 +56,16 @@ def get_ground_truth(func_name, x_vals):
     else:
         raise ValueError(f"Unsupported function: {func_name}")
 
+# ---------- Main Evaluation ----------
 
 def evaluate_all():
-    root_model_dir = "../models/AutoDiff/1d"
+    # FD-Noblur
+    root_model_dir = "../models/FD-Blur/1d"
     save_dir = "plots_eval_analytic"
     os.makedirs(save_dir, exist_ok=True)
 
     functions = ["ackley", "gm", "hr"]
-    orders = [1]
+    orders = [0, 1, 2]
     N = 2048
     x_vals = torch.linspace(-1, 1, N).view(-1, 1).cuda()
     x_np = x_vals.cpu().numpy()
@@ -81,16 +85,17 @@ def evaluate_all():
             mse = np.mean((pred - gt) ** 2)
             print(f"MSE: {mse:.9f}")
 
+            # # --- Plot ---
             plt.figure(figsize=(10, 4))
-            plt.plot(gt, label="Ground Truth", linewidth=1)
-            plt.plot(pred, '--', label=f"Predicted (Order {order})", linewidth=1)
+            # plt.plot(x_np, gt, label="Ground Truth", linewidth=1)
+            plt.plot(x_np, pred, '--', label=f"Predicted (Order {order + 1})", linewidth=1)
             plt.title(f"{func.upper()} | Order {order} Derivative")
             plt.xlabel("x")
             plt.ylabel("y")
-            plt.grid(False)
+            plt.grid(True)
             plt.legend()
             plt.tight_layout()
-            save_path = os.path.join(save_dir, f"{func}_order{order}.png")
+            save_path = os.path.join(save_dir, f"{func}_order{order+1}.png")
             plt.savefig(save_path)
             plt.close()
 

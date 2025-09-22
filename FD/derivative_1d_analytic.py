@@ -59,7 +59,7 @@ def get_ground_truth(func_name, x_vals):
 # ---------- Main Evaluation ----------
 
 def evaluate_all():
-    root_model_dir = "/HPS/antiderivative_project/work/NFC-Blur/experiments/results_1d"
+    root_model_dir = "../models/FD-Noblur/1d"
     save_dir = "plots_eval_analytic"
     os.makedirs(save_dir, exist_ok=True)
 
@@ -72,21 +72,24 @@ def evaluate_all():
     for func in functions:
         for order in orders:
             print(f"\nEvaluating {func} | Order {order}")
-            model_path = os.path.join(root_model_dir, f"NFC-Blur_{func}_order={order}", "current.pth")
+            model_path = os.path.join(root_model_dir, f"{func}_order={order}.pth")
             if not os.path.exists(model_path):
                 print(f"Model not found at {model_path}")
                 continue
 
             model = load_model(model_path)
+            
             pred = chunked_derivative(model, x_vals, order).reshape(-1, 1)
+            if order == 0:
+                pred *=-1
             gt = get_ground_truth(func, x_np).reshape(-1, 1)
 
             mse = np.mean((pred - gt) ** 2)
-            print(f"MSE: {mse:.9f}")
+            print(f"MSE: {mse:.6f}")
 
             # # --- Plot ---
             plt.figure(figsize=(10, 4))
-            # plt.plot(x_np, gt, label="Ground Truth", linewidth=1)
+            plt.plot(x_np, gt, label="Ground Truth", linewidth=1)
             plt.plot(x_np, pred, '--', label=f"Predicted (Order {order + 1})", linewidth=1)
             plt.title(f"{func.upper()} | Order {order} Derivative")
             plt.xlabel("x")
