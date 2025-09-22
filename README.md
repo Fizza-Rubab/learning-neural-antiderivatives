@@ -11,7 +11,7 @@ Neural fields offer continuous, learnable representations that extend beyond tra
 
 ---
 
-## 📂 Data
+## Data
 
 Download and extract the [data package](https://neural-antiderivatives.mpi-inf.mpg.de/data.zip) into the `data/` folder.  
 
@@ -26,14 +26,14 @@ The main directories are:
 
 ---
 
-## 🤖 Models
+## Models
 
 Pretrained models can be downloaded from [here](https://neural-antiderivatives.mpi-inf.mpg.de/trained_models.zip).  
 Extract into the `models/` folder.  
 
 ---
 
-## 🚀 Usage
+## Usage
 
 Each subfolder contains instructions for training models and reproducing experiments.  
 Please refer to the respective README in:  
@@ -45,7 +45,7 @@ Please refer to the respective README in:
 
 ---
 
-## 📜 Citation
+## Citation
 
 If you find this work useful, please cite:  
 

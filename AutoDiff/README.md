@@ -5,7 +5,7 @@ Experiments can be run across different dimensions (1D, 2D, 3D), signal types (a
 
 ---
 
-## 📂 Scripts Overview
+## Scripts Overview
 
 ### Training
 - `train_1d.py` — 1D analytic functions (Ackley, Gaussians, hyperrectangles).  
@@ -22,15 +22,11 @@ Experiments can be run across different dimensions (1D, 2D, 3D), signal types (a
 
 ---
 
-## 🚀 Running Experiments
+## Running Experiments
 
-Below are examples for training and evaluating with AD supervision.  
-Use descriptive experiment names:  
-`{dimension}_{datatype}_{signal/order}` (e.g., `2d_image_0008_order1`).  
+Below are examples for training AD supervision.  
 
----
-
-### 🔹 1D
+### 1D
 #### 1D Analytic (Ackley function, order 1)
 ```bash
 python train_1d.py \
@@ -72,7 +68,7 @@ python train_1d_motion.py \
   --order 1
 ```
 
-### 🔹 2D
+### 2D
 
 #### Analytic Function (Hyperrectangle, order 2)
 
@@ -133,7 +129,7 @@ python train_2d_envmap.py \
   --order 1
 ```
 
-### 🔹 3D
+### 3D
 
 #### Analytic Function (Gaussian, order 2)
 
