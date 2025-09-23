@@ -151,11 +151,11 @@ python train_3d.py \
   --order 2
 ```
 
-#### Real Geometry
+#### Geometry
 ```bash
 python train_3d.py \
   --summary "logs" \
-  --experiment_name "3d_sdf_chair_order1" \
+  --experiment_name "3d_sdf_bunny_order1" \
   --batch 256 \
   --num-steps 2000 \
   --num_channels 256 \
@@ -169,3 +169,12 @@ python train_3d.py \
   --object "../../data/geometry/Stanford_bunny.ply" \
   --order 1
 ```
+
+
+## Evaluating
+
+The scripts `derivative_*.py` and `eval.py` are used for evaluation.  
+They do **not** take command-line arguments.  
+
+- If you have extracted the pretrained models correctly, you can run these scripts directly to reproduce results.  
+- If you are using your own trained models, update the corresponding file paths inside the scripts to point to your model checkpoints.  

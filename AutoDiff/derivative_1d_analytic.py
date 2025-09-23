@@ -61,7 +61,7 @@ def evaluate_all():
     os.makedirs(save_dir, exist_ok=True)
 
     functions = ["ackley", "gm", "hr"]
-    orders = [1]
+    orders = [1, 2, 3]
     N = 2048
     x_vals = torch.linspace(-1, 1, N).view(-1, 1).cuda()
     x_np = x_vals.cpu().numpy()
