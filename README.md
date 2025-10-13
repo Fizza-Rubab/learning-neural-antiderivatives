@@ -35,13 +35,15 @@ Extract into the `models/` folder.
 
 ## Usage
 
-Each subfolder contains instructions for training models and reproducing experiments.  
+Each subfolder contains instructions for training models and reproducing evaluation and convolution experiments.  
 Please refer to the respective README in:  
 - `Integral/`  
 - `AutoDiff/`  
 - `Reduction/`  
 - `FD/`  
 - `DoG/`  
+
+The `Rendering/` folder contains code with individual rendering files for each method.
 
 ---
 
