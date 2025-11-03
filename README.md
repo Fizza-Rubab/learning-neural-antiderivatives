@@ -75,8 +75,10 @@ pip install torch==2.6.0+cu124 torchvision torchaudio --index-url https://downlo
 conda install numpy imageio click
 conda install -c conda-forge opencv matplotlib pillow cupy
 conda install -c fastai opencv-python-headless
-pip install decord functorch plyfile pysdf scikit_image scipy trimesh jax jaxlib tensorboard open3d
-pip install simpleimageio lpips librosa pyglet
+pip install decord functorch plyfile pysdf scikit_image scipy scikit-image scikit-learn 
+pip install trimesh jax jaxlib tensorboard open3d
+pip install simpleimageio lpips librosa tqdm
+pip install pyopengl pyglet glfw click
 ```
 
 ---
