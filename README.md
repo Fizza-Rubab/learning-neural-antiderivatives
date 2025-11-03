@@ -19,8 +19,7 @@ The archive contains two zip files: `data.zip` and `convolution_mc.zip`.
 - Extract **`data.zip`** into the `data/` folder.  
 - Extract **`convolution_mc.zip`** into the `convolution_mc/` folder.  
 
- `data/` Directory Structure
-Contains all datasets used for analytic, real, and geometric experiments.
+ `data/`contains all datasets used for analytic, real, and geometric experiments.
 
 - `motion/` — motion capture sequences.  
 - `images/` — natural RGB images.  
@@ -31,8 +30,7 @@ Contains all datasets used for analytic, real, and geometric experiments.
 - `analytic_params/` — stored parameters for analytic Gaussian and hyper-rectangle mixtures.  
 
 
-`convolution_mc/` Directory Structure
-Contains **reference ground truths** for the convolution experiments.
+`convolution_mc/` contains **reference ground truths** for the convolution experiments.
 
 - `images/` — natural RGB images.  
 - `envmap/` — HDR environment maps.  
@@ -60,13 +58,7 @@ After extraction, your `models/` folder should contain the following subdirector
 
 ## Usage
 
-Each subfolder contains instructions for training models and reproducing evaluation and convolution experiments.  
-Please refer to the respective README in:  
-- `Integral/`  
-- `AutoDiff/`  
-- `Reduction/`  
-- `FD/`  
-- `DoG/`  
+Each subfolder contains instructions for training models and reproducing evaluation and convolution experiments. Please refer to the respective READMEs.
 
 The `Rendering/` folder contains code with individual rendering files for each method.
 
