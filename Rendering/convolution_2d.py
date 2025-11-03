@@ -88,7 +88,7 @@ class SceneOP(OpenGLOP):
 
         self.sphere_fg = VertexArrayObject().upload_mesh(sphere_mesh, self.shaders[0])
         self.sphere_bg = VertexArrayObject().upload_mesh(sphere_mesh, self.shaders[1])
-        env_path = r"..data\envmap\large_corridor_1k.exr"
+        env_path = r"..\data\envmap\large_corridor_1k.exr"
         self.model_name = os.path.basename(env_path)[:-4]
         self.equirect_map = Texture2D(load_image(env_path))
         brdf_path = rf"brdfs/diff_opt_{self.order}_13_{self.shininess}_0.0_512.exr"
