@@ -7,8 +7,6 @@ This repository contains the official Python implementation of our paper:
 
 Neural fields offer continuous, learnable representations that extend beyond traditional discrete formats in visual computing. We study the problem of learning **neural representations of repeated antiderivatives** directly from a function, a continuous analogue of summed-area tables. Although widely used in discrete domains, such cumulative schemes rely on grids, which prevents their applicability in continuous neural contexts. We introduce and analyze a range of neural methods for repeated integration, including both adaptations of prior work and novel designs. Our evaluation spans multiple input dimensionalities and integration orders, assessing both reconstruction quality and performance in downstream tasks such as filtering and rendering. These results enable integrating classical cumulative operators into modern neural systems and offer insights into learning tasks involving differential and integral operators.
 
-
-
 ---
 
 ## Data
@@ -61,6 +59,25 @@ After extraction, your `models/` folder should contain the following subdirector
 Each subfolder contains instructions for training models and reproducing evaluation and convolution experiments. Please refer to the respective READMEs.
 
 The `Rendering/` folder contains code with individual rendering files for each method.
+
+---
+
+## Environment
+
+# Environment Setup
+
+Below are the recommended steps to set up your environment.
+
+```bash
+conda create -n neural-antiderivatives python=3.10
+conda activate neural-antiderivatives
+pip install torch==2.6.0+cu124 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
+conda install numpy imageio click
+conda install -c conda-forge opencv matplotlib pillow cupy
+conda install -c fastai opencv-python-headless
+pip install decord functorch plyfile pysdf scikit_image scipy trimesh jax jaxlib tensorboard open3d
+pip install simpleimageio lpips librosa pyglet
+```
 
 ---
 
