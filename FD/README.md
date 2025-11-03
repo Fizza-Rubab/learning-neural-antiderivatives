@@ -134,15 +134,39 @@ python train_3d.py \
 
 ---
 
-## Evaluating
+## Evaluation
 
-The evaluation scripts do **not** take command-line arguments.  
+The repository provides two main evaluation types:
 
-- Run the appropriate `derivative_*.py` or `eval.py` script depending on **blur** vs. **non-blur**.  
-- If pretrained models are extracted correctly, they can be run directly.  
-- For custom models, edit the file paths inside the scripts to point to your model checkpoints.  
+### Reconstruction (`derivative_*.py`)
 
-Examples:  
-- `derivative_2d_all.py` → Evaluate FD without blur on 2D real images.  
-- `derivative_2d_all_blur.py` → Evaluate FD with blur compensation on 2D real images.  
-- `eval_blur.py` → Evaluate blur-compensated convolution results.  
+Use these scripts to evaluate derivative-based reconstructions. Append `_blur.py` to the end of these files to evaluate the blurred version.
+
+- `derivative_1d_motion_all.py` → motion signals  
+- `derivative_2d_all.py` → images  
+- `derivative_3d_all.py` → 3D geometry  
+- `derivative_*d_analytic.py` → analytic signals
+
+Run directly, e.g.:
+
+```bash
+python derivative_1d_motion_all.py
+python derivative_2d_all.py
+python derivative_3d_all.py
+```
+
+### Convolution (`eval.py`)
+
+Used to evaluate a particular model trained with FD for a convolution task. Run eval.py or eval_blur.py depending on the method.
+
+```bash
+python eval.py --model_path="../models/FD-Blur/1d/subject_0_order=2.pth"
+python eval.py --model_path="../models/FD-Noblur/2d/0085_order=1_25.pth"
+python eval.py --model_path="../models/FD-Noblur/3d/Stanford_bunny_order=0_scale=25.pth"
+```
+
+```bash
+python eval_blur.py --model_path="../models/FD-Blur/1d/subject_10_motion1d_order_0_minimal_0.04_samples_100000.npy_order=0.pth"
+python eval_blur.py --model_path="../models/FD-Blur/1d/subject_10_motion1d_order_0_minimal_0.04_samples_100000.npy_order=0.pth"
+python eval_blur.py --model_path="../models/FD-Blur/3d/Thingi10K_815483_3d_order_0_0.04_samples_10000_order=0.pth"
+```

@@ -3,7 +3,6 @@ import torch
 import numpy as np
 import matplotlib.pyplot as plt
 import cv2
-
 from model import CoordinateNet_ordinary as CoordinateNet
 from torch.func import vmap, jacfwd, jacrev
 from skimage.metrics import peak_signal_noise_ratio as compare_psnr

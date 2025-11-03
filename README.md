@@ -13,23 +13,48 @@ Neural fields offer continuous, learnable representations that extend beyond tra
 
 ## Data
 
-Download and extract the [data package](https://neural-antiderivatives.mpi-inf.mpg.de/data.zip) into the `data/` folder.  
+Download and extract the [data package](https://neural-antiderivatives.mpi-inf.mpg.de/data.zip).  
+The archive contains two zip files: `data.zip` and `convolution_mc.zip`.  
 
-The main directories are:  
+- Extract **`data.zip`** into the `data/` folder.  
+- Extract **`convolution_mc.zip`** into the `convolution_mc/` folder.  
+
+ `data/` Directory Structure
+Contains all datasets used for analytic, real, and geometric experiments.
+
 - `motion/` — motion capture sequences.  
 - `images/` — natural RGB images.  
-- `envmap/` — environment map HDR images.  
-- `geometry/` — signed distance functions.  
-- `fd_blurred_gts/` — Monte Carlo ground truths for finite-difference (blurred supervision).  
-- `dog_blurred_gts/` — Monte Carlo ground truths for smooth operators (blurred supervision).  
-- `analytic_params/` — parameters for Gaussian and hyper-rectangle mixture functions.  
+- `envmap/` — HDR environment maps for lighting tasks.  
+- `geometry/` — 3D geometry and signed distance functions (SDFs).  
+- `fd_blurred_gts/` — Monte Carlo ground truths for **finite-difference** blurred supervision.  
+- `dog_blurred_gts/` — Monte Carlo ground truths for **Derivative of Gaussian (DoG)** blurred supervision.  
+- `analytic_params/` — stored parameters for analytic Gaussian and hyper-rectangle mixtures.  
+
+
+`convolution_mc/` Directory Structure
+Contains **reference ground truths** for the convolution experiments.
+
+- `images/` — natural RGB images.  
+- `envmap/` — HDR environment maps.  
+- `geometry/` — signed distance fields for 3D shapes.  
 
 ---
 
 ## Models
 
 Pretrained models can be downloaded from [here](https://neural-antiderivatives.mpi-inf.mpg.de/trained_models.zip).  
-Extract into the `models/` folder.  
+Extract the contents into the `models/` directory.
+
+After extraction, your `models/` folder should contain the following subdirectories:
+
+- `envmodels/` — pretrained environment map models.  
+- `AutoDiff/` — models trained using Automatic Differentiation (AD).  
+- `Reduction/` — models trained using AD with Reduction.  
+- `Integral` — models trained using Integral Supervision.
+- `DoG-Noblur/` — Derivative of Gaussian (DoG) models trained **without blur**.  
+- `DoG-Blur/` — Derivative of Gaussian (DoG) models trained **with blur**.  
+- `FD-Noblur/` — Finite Difference (FD) models trained **without blur**.  
+- `FD-Blur/` — Finite Difference (FD) models trained **with blur**.  
 
 ---
 

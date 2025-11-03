@@ -1,5 +1,7 @@
 import os
 import sys
+import glob
+import re
 sys.path.append('../')
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
@@ -7,9 +9,7 @@ import torch
 import numpy as np
 import matplotlib.pyplot as plt
 from torch.func import vmap, jacfwd, jacrev
-
 from model import CoordinateNet_ordinary as CoordinateNet
-
 
 def pad_signal_1d(signal, pad_fraction=0.3):
     pad = int(signal.shape[0] * pad_fraction)
@@ -42,11 +42,11 @@ def read_pose(file_path, normalize=True, num_frames=5000):
 
 
 def nth_derivative(model, x, order):
-    if order == 1:
+    if order == 0:
         return vmap(jacfwd(model))(x)
-    elif order == 2:
+    elif order == 1:
         return vmap(jacrev(jacfwd(model)))(x)
-    elif order == 3:
+    elif order == 2:
         return vmap(jacfwd(jacrev(jacfwd(model))))(x)
     else:
         raise ValueError("Only orders 1–3 supported.")
@@ -61,8 +61,12 @@ def chunked_derivative(model, coords, order, chunk_size=2048):
         outputs.append(out.detach().cpu())
     return torch.cat(outputs, dim=0).numpy()
 
-
 def evaluate_model(net_path, pose_path, order):
+    scale_match = re.search(r"scale[_=]?([0-9.]+)", os.path.basename(net_path))
+    if not scale_match:
+        raise ValueError(f"Could not infer scale from {net_path}")
+    scale = float(scale_match.group(1))
+
     weights = torch.load(net_path)
     model = CoordinateNet(
         weights['output'], weights['activation'], weights['input'],
@@ -77,18 +81,30 @@ def evaluate_model(net_path, pose_path, order):
     x = torch.linspace(-1, 1, N).view(-1, 1).cuda()
 
     pred = chunked_derivative(model, x, order).reshape(-1, 69)
+
+    if order == 0:
+        pred = -pred * (scale ** 1)
+    elif order == 1:
+        pred = pred * (scale ** 2)
+    elif order == 2:
+        pred = -pred * (scale ** 3)
+
     mse = np.mean((pred - gt) ** 2)
-    return x.detach().cpu().numpy(), pred, gt, mse
+    return x.detach().cpu().numpy(), pred, gt, mse, scale
+
 
 
 def main():
-    pose_dir = "/HPS/antiderivative_project/work/data/poses"
-    ckpt_root = "/HPS/antiderivative_project/work/NFC-Blur/experiments/results_1d"
-    eval_dir = "evaluation_1d"
+    BASE_ROOT = r"../models"
+    MODE = "DoG-Noblur"       # or "DoG-Noblur"
+    pose_dir = r"..\data\motion" 
+
+    ckpt_root = os.path.join(BASE_ROOT, MODE, "1d")
+    eval_dir = f"evaluation_1d_{MODE.lower()}"
     plot_dir = os.path.join(eval_dir, "plots")
     os.makedirs(plot_dir, exist_ok=True)
 
-    orders = [1, 2, 3]
+    orders = [0, 1]
     all_logs = []
 
     for order in orders:
@@ -99,23 +115,26 @@ def main():
 
             base_name = os.path.splitext(fname)[0]
             pose_path = os.path.join(pose_dir, fname)
-            ckpt_path = os.path.join(ckpt_root, f"NFC-Blur_{base_name}_motion1d_order_{order-1}_minimal_0.04_samples_100000.npy_order={order-1}", "current.pth")
 
-            if not os.path.exists(ckpt_path):
-                print(f"Skipping missing checkpoint: {ckpt_path}")
+            pattern = os.path.join(ckpt_root, f"{base_name}*_order_{order}_*.pth")
+            matches = glob.glob(pattern)
+            if not matches:
+                print(f"Skipping: no model found for {base_name} (order={order})")
                 continue
 
+            ckpt_path = matches[0]
+            print(f"Using model: {os.path.basename(ckpt_path)}")
+
             try:
-                x_vals, pred, gt, mse = evaluate_model(ckpt_path, pose_path, order)
+                x_vals, pred, gt, mse, scale = evaluate_model(ckpt_path, pose_path, order)
             except Exception as e:
                 print(f"Error evaluating {fname} order {order}: {e}")
                 continue
 
-            print(f"{base_name}, order={order}, MSE={mse:.6f}")
-            all_logs.append(f"{base_name}, order={order}, MSE={mse:.6f}\n")
+            print(f"{base_name}, order={order}, scale={scale}, MSE={mse:.6f}")
+            all_logs.append(f"{base_name}, order={order}, scale={scale}, MSE={mse:.6f}\n")
 
-            # Plot one joint component
-            joint_idx = 5  # e.g., joint 1's Y-axis
+            joint_idx = 5
             plt.figure(figsize=(10, 4))
             plt.plot(x_vals, gt[:, joint_idx], label="GT", linewidth=1)
             plt.plot(x_vals, pred[:, joint_idx], '--', label="Pred", linewidth=1)
@@ -124,21 +143,16 @@ def main():
             plt.legend()
             plt.grid(True)
             plt.tight_layout()
-            plot_path = os.path.join(plot_dir, f"{base_name}_order{order}.png")
+            plot_path = os.path.join(plot_dir, f"{base_name}_order{order}_scale{scale}.png")
             plt.savefig(plot_path)
             plt.close()
 
-            npy_dir = os.path.join(eval_dir, "npys")
-            os.makedirs(npy_dir, exist_ok=True)	
-            npy_file = os.path.join(npy_dir, f"{base_name}_order{order}.npy")
-            np.save(npy_file, {'x_vals': x_vals, 'pred': pred, 'gt': gt})
-            break
-
-    # Write log file once
     os.makedirs(eval_dir, exist_ok=True)
     log_path = os.path.join(eval_dir, "mse_results.txt")
     with open(log_path, 'w') as f:
         f.writelines(all_logs)
+
+    print(f"Evaluation complete. Results saved to {log_path}")
 
 
 if __name__ == "__main__":

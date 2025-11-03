@@ -21,6 +21,18 @@ from skimage.metrics import structural_similarity as ssim
 import lpips
 import torch.nn.functional as F
 
+def plot_sdf_slice(pred, gt, z_idx, save_name):
+    fig, axes = plt.subplots(1, 2, figsize=(8, 4))
+    axes[0].imshow(pred[z_idx], cmap='seismic', vmin=-1, vmax=1)
+    axes[0].set_title("Predicted")
+    axes[1].imshow(gt[z_idx], cmap='seismic', vmin=-1, vmax=1)
+    axes[1].set_title("Ground Truth")
+    for ax in axes:
+        ax.axis("off")
+    plt.tight_layout()
+    plt.savefig(save_name)
+    plt.close()
+
 
 def save_frames(frames, path):
     for i in range(frames.shape[2]):
@@ -248,226 +260,133 @@ def evaluate(kern_path,
 
 
 @click.command()
-@click.option("--model_path", default='', help="path to data")
-@click.option("--kernel_path", default='', help="path to kernel")
-@click.option("--save_path", default='', help="path to save output")
-@click.option("--modality", default=1, help="modality flag")
-@click.option("--width", default=128, help="signal width")
-@click.option("--height", default=128, help="signal height")
-@click.option("--depth", default=100, help="signal depth (3d and video)")
+@click.option("--model_path", default='', help="path to model (.pth file)")
+@click.option("--kernel_path", default='', help="path to kernel directory")
+@click.option("--save_path", default='convolution_results', help="path to save output")
 @click.option("--block_size", default=32, help="sub block size")
-@click.option("--kernel_scale", default=20.0, help="sub block size")
-@click.option("--order", default=20.0, help="order")
-def run_evaluation(model_path,
-                   kernel_path,
-                   save_path,
-                   modality,
-                   width,
-                   height,
-                   depth,
-                   block_size,
-                   kernel_scale,
-                   order):
-    save_dir = save_path
+def run_evaluation(model_path, kernel_path, save_path, block_size):
 
-    path1 = '/HPS/n_ntumba/work/Fizza_project/Experiment1d_without_blur/1st'
-    path2 = '/HPS/n_ntumba/work/Fizza_project/Experiment1d_with_blur/1st'
-    path3 = '/HPS/n_ntumba/work/Fizza_project/Experiment1d_without_blur/2nd'
-    path4 = '/HPS/n_ntumba/work/Fizza_project/Experiment1d_with_blur/2nd/'
-    path5 = '/HPS/n_ntumba/work/Fizza_project/Experiment_2d_without_blur/1st_order'
-    path6 = '/HPS/n_ntumba/work/Fizza_project/Experiment2d_with_blur/1st_order'
-    path7 = '/HPS/n_ntumba/work/Fizza_project/Experiment3d_without_blur/1st_order'
-    path8 = '/HPS/n_ntumba/work/Fizza_project/Experiment3d _with_blur/1st_order'
+    model_path_lower = model_path.lower()
+    if "/1d/" in model_path_lower:
+        modality = 0
+    elif "/2d/" in model_path_lower:
+        modality = 1
+    elif "/3d/" in model_path_lower:
+        modality = 2
+    else:
+        raise ValueError("Cannot infer modality from model path")
 
-    tag = 2
-    # all paths contain multiple models.
-    model_paths = [path1, path2, path3, path4, path5, path6, path7, path8][-tag:]
-    print(model_paths)
-    #exit()
+    model_name = os.path.basename(model_path).replace(".pth", "")
 
-    block_size = 32
-    modality_array = [0, 0, 0, 0, 1, 1, 2, 2][-tag:]
+    matches = re.findall(r"_order[_=]([0-9]+)", model_name)
+    if not matches:
+        raise ValueError(f"Could not extract order from model name: {model_name}")
+    order = int(matches[-1])
 
-    type = ['1d_motion_without_blur_order0',
-            '1d_motion_with_blur_order0',
-            '1d_motion_without_blur_order1',
-            '1d_motion_with_blur_order1',
-            '2d_without_blur_order0',
-            '2d_with_blur_order0',
-            '3d_without_blur_order0',
-            '3d_with_blur_order0', ][-tag:]
+    # Extract scale if present
+    scale_match = re.search(r"scale[_=]([0-9.]+)", model_name)
+    scale_val = float(scale_match.group(1)) if scale_match else None
 
-    orders = [0,
-             0,
-             1,
-             1,
-             0,
-             0,
-             0,
-             0][-tag:]
+    if modality == 0:
+        width, height, depth = 5000, 1, 1
+        conv_fn = do_1d_motion_conv
+    elif modality == 1:
+        width, height, depth = 1638, 1638, 1
+        conv_fn = do_2d_conv
+    elif modality == 2:
+        width, height, depth = 408, 408, 408
+        conv_fn = do_3d_conv
+    else:
+        raise ValueError("Unsupported modality")
 
-    _3d = 10
-    scales = [0.01, 0.01, 0.03, 0.03, 0.01, 0.01, 0.2, 0.2][-tag:]
-    wi = [5000, 5000, 5000, 5000, 1638, 1638, _3d, _3d][-tag:]
-    he = [0, 0, 0, 0, 1638, 1638, _3d, _3d][-tag:]
-    de = [0, 0, 0, 0, 0, 0, _3d, _3d][-tag:]
+    create_or_recreate_folders(save_path)
+    kernel_scales = [1 / 0.1, 1 / 0.2, 1 / 0.3]
 
+    for kernel_scale in kernel_scales:
+        st = time.time()
+        output_tensor = evaluate(
+            kernel_path,
+            model_path,
+            (width, height, depth),
+            kernel_scale,
+            conv_fn,
+            modality=modality,
+            block_size=block_size,
+            order=order,
+            scale=scale_val,
+        )
+        print("elapsed time", time.time() - st, "s")
 
-    for i in range(len(model_paths)):
-        current_model = model_paths[i]
-        save_path = os.path.join(save_dir, type[i])
-        create_or_recreate_folders(save_path)
+        if modality == 0:
+            padding_fraction = 0.3
+            start = int(padding_fraction * width)
+            clipped_tensor = output_tensor[start:-start]
+            subj_match = re.search(r"subject[_-]?(\d+)", model_name)
+            subject = int(subj_match.group(1)) if subj_match else 0
+            gt_path = f"../convolution_mc/motion/subject_{subject}_motion1d_order_{order}_minimal_{np.round(1/kernel_scale, 1)}_samples_100000.npy"
+            gt_np = np.load(gt_path, allow_pickle=True).item()["res"]
+            mse = ((gt_np[start:-start, :] - clipped_tensor) ** 2).mean()
+            plt.figure()
+            plt.plot(gt_np[start:-start, 20], label="gt")
+            plt.plot(output_tensor[start:-start, 20], label="pred")
+            plt.legend()
+            plt.savefig(os.path.join(save_path, f"{model_name}_{np.round(1/kernel_scale, 1)}.png"))
+            plt.close()
+            with open(os.path.join(save_path, "results_summary.txt"), "a") as f:
+                f.write(f"{model_name}, kernel_scale={1/kernel_scale:.2f}, order={order}, MSE={mse:.8f}\n")
 
-        modality = modality_array[i]
-        width = wi[i]
-        height = he[i]
-        depth = de[i]
-        block_size = block_size
-        active_scale = scales[i]
-        order = orders[i]
+        elif modality == 1:
+            padding_fraction = 0.3
+            start = int(padding_fraction * width)
+            clipped_pred = output_tensor[start:-start, start:-start, :]
 
-        model_lists = os.listdir(current_model)
+            name_match = re.findall(r"(\d+)", model_name)
+            if not name_match:
+                raise ValueError(f"Cannot find numeric ID in {model_name}")
+            name = name_match[0]
 
-        for j in range(len(model_lists)):
+            gt_path = f"../convolution_mc/images/{name}_2d_order_{order}_minimal_{np.round(1/kernel_scale, 1)}_samples_200000.npy"
+            gt_np = np.load(gt_path, allow_pickle=True).item()["res"]
+            gt_crop = gt_np[start:-start, start:-start, :]
+            raw_mse = ((clipped_pred - gt_crop) ** 2).mean()
+            pred_clip = np.clip(clipped_pred, 0, 1)
+            gt_clip = np.clip(gt_crop, 0, 1)
+            ssim_val = ssim(pred_clip, gt_clip, channel_axis=-1, data_range=1.0)
+            lpips_model = lpips.LPIPS(net="alex").cuda()
+            pred_torch = torch.from_numpy(pred_clip.transpose(2, 0, 1)).unsqueeze(0).float() * 2 - 1
+            gt_torch = torch.from_numpy(gt_clip.transpose(2, 0, 1)).unsqueeze(0).float() * 2 - 1
+            lpips_val = lpips_model(pred_torch.cuda(), gt_torch.cuda()).item()
+            combined = np.concatenate([gt_clip, pred_clip], axis=1)
+            imageio.imwrite(os.path.join(save_path, f"{name}_order={order}_{np.round(1/kernel_scale, 1)}.png"), (combined * 255).astype(np.uint8))
+            with open(os.path.join(save_path, "results_summary.txt"), "a") as f:
+                f.write(f"{model_name}, kernel_scale={1/kernel_scale:.2f}, order={order}, MSE={raw_mse:.8f}, SSIM={ssim_val:.8f}, LPIPS={lpips_val:.8f}\n")
 
-            current_model_path = os.path.join(current_model, model_lists[j], f'current.pth')
-            model_name = os.path.basename(os.path.dirname(current_model_path))
+        elif modality == 2:
+            padding_fraction = 0.3
+            start = int(padding_fraction * depth)
+            clipped_pred = output_tensor[start:-start, start:-start, start:-start]
+            if order == 0:
+                clipped_pred *= -1
 
-            kernel_scales = [1 / 0.1, 1 / 0.2, 1 / 0.3]
-            for kernel_scale in kernel_scales:
-                path = current_model_path
-                kern_path = kernel_path
+            base = model_name.split("_3d")[0]
+            gt_path = f"../convolution_mc/geometry/{base}_3d_order_{order}_{np.round(1/kernel_scale, 1)}_samples_20000.npy"
+            gt_np = np.load(gt_path, allow_pickle=True).item()["res"]
+            gt_crop = gt_np[start:-start, start:-start, start:-start]
+            mse = ((gt_crop - clipped_pred) ** 2).mean()
+            mesh_name = f"{model_name}_order{order}_scale{np.round(1/kernel_scale, 1)}.ply"
+            plot_sdf_slice(clipped_pred, gt_crop, z_idx=clipped_pred.shape[0] // 2,
+                           save_name=os.path.join(save_path, mesh_name[:-3] + "png"))
+            try:
+                save_mesh(clipped_pred, save_path, mesh_name)
+            except:
+                pass
+            with open(os.path.join(save_path, "results_summary.txt"), "a") as f:
+                f.write(f"{model_name}, kernel_scale={1/kernel_scale:.2f}, order={order}, MSE={mse:.8f}\n")
 
-                conv_fn = do_2d_conv
+        elif modality == 3:
+            save_frames(output_tensor, save_path)
 
-                if modality == 0:
-                    conv_fn = do_1d_motion_conv
-                elif modality == 1:
-                    conv_fn = do_2d_conv
-                elif modality == 2:
-                    conv_fn = do_3d_conv
-                elif modality == 3:
-                    conv_fn = do_video_conv
+    print("Evaluation complete.")
 
-                st = time.time()
-
-                output_tensor = evaluate(kern_path,
-                                         path,
-                                         (width, height, depth),
-                                         kernel_scale,
-                                         conv_fn,
-                                         modality=modality,
-                                         block_size=block_size,
-                                         order=order,
-                                         scale=active_scale)
-                et = time.time()
-                print("elapsed time", et - st, "s")
-
-                if modality == 0:
-                    mse_log = defaultdict(list)
-                    padding_fraction = 0.3
-                    start = int(padding_fraction * 5000)
-
-                    clipped_tensor = output_tensor[start:-start]
-                    clipped_tensor = output_tensor[start:-start]
-                    subject = int(re.findall(r'\d+', model_name)[0])
-                    print("model_name", model_name)
-                    gt_path = fr"../convolution_mc/motion/subject_{subject}_motion1d_order_{int(order)}_minimal_{np.round(1 / kernel_scale, 1)}_samples_100000.npy"
-                    print("gt_path", gt_path)
-                    print("order", order)
-                    gt_np = np.load(gt_path, allow_pickle=True).item()['res']
-                    mse = ((gt_np[start:-start, :] - output_tensor[start:-start, :]) ** 2).mean()
-                    print("MSE", mse)
-                    mse_log[(order, round(1 / kernel_scale, 1))].append(mse)
-                    plt.figure()
-                    plt.plot(gt_np[start:-start, 11], label="gt")
-                    plt.plot(output_tensor[start:-start, 11], label="pred")
-                    plt.legend()
-                    print(f'other')
-                    print(os.path.join(save_path, f"{model_name}_{np.round(1 / kernel_scale, 1)}.png"))
-                    #print(save_path)
-                    #print(f'here')
-
-                    plt.savefig(os.path.join(save_path, f"{model_name}_{np.round(1 / kernel_scale, 1)}.png"))
-
-                    summary_path = os.path.join(save_path, "results_summary.txt")
-
-                    with open(summary_path, "a") as f:
-                        f.write(f"{model_name}, kernel_scale={1 / kernel_scale:.2f}, order={order}, MSE={mse:.8f}\n")
-
-                    print(f"Appended results to {summary_path}")
-
-                # images
-                if modality == 1:
-                    padding_fraction = 0.3
-                    start = int(padding_fraction * 1024)
-                    clipped_pred = output_tensor[start:-start, start:-start, :]
-                    name = (re.findall(r'\d+', model_name)[0])
-                    gt_path = fr"../convolution_mc/image_mc_order={int(order)}/{name}_2d_order_{int(order)}_minimal_{np.round(1 / kernel_scale, 1)}_samples_200000.npy"
-                    gt_np = np.load(gt_path, allow_pickle=True).item()['res']
-                    gt_crop = gt_np[start:-start, start:-start, :]
-
-                    raw_mse = ((output_tensor[start:-start, start:-start, :] - gt_crop) ** 2).mean()
-
-                    pred_clip = np.clip(clipped_pred, 0, 1)
-                    gt_clip = np.clip(gt_crop, 0, 1)
-                    ssim_val = ssim(pred_clip, gt_clip, channel_axis=-1, data_range=1.0)
-                    lpips_model = lpips.LPIPS(net='alex').cuda()
-                    pred_torch = torch.from_numpy(pred_clip.transpose(2, 0, 1)).unsqueeze(0).float() * 2 - 1
-                    gt_torch = torch.from_numpy(gt_clip.transpose(2, 0, 1)).unsqueeze(0).float() * 2 - 1
-                    lpips_val = lpips_model(pred_torch.cuda(), gt_torch.cuda()).item()
-
-                    combined = np.concatenate([gt_clip, pred_clip], axis=1)
-                    to_save = (combined * 255).astype(np.uint8)
-                    img_path = os.path.join(save_path, f"{name}_order={order}_{np.round(1 / kernel_scale, 1)}.png")
-                    imageio.imwrite(img_path, to_save)
-                    print(f"MSE={raw_mse:.8f}, SSIM={ssim_val:.8f}, LPIPS={lpips_val:.8f}\n")
-                    summary_path = os.path.join(save_path, "results_summary.txt")
-                    with open(summary_path, "a") as f:
-                        f.write(
-                            f"{model_name}, kernel_scale={1 / kernel_scale:.2f}, order={order}, "
-                            f"MSE={raw_mse:.8f}, SSIM={ssim_val:.8f}, LPIPS={lpips_val:.8f}\n"
-                        )
-
-                    print(f"Saved comparison and metrics to {summary_path}")
-
-                if modality == 2:
-                    padding_fraction = 0.3
-                    start = int(padding_fraction * 256)
-                    clipped_pred = output_tensor[start:-start, start:-start, start:-start]
-
-                    name = model_name.split("_3d")[0][9:]
-                    print(name)
-                    gt_path = glob.glob(os.path.join(f'../convolution_mc/geometry_mc_order={int(order)}', '*_'))
-                    print(gt_path)
-                    print(f'here')
-                    gt_path = f"../convolution_mc/geometry_mc_order={int(order)}/{name}_3d_order_{int(order)}_{np.round(1 / kernel_scale, 1)}_samples_20000.npy"
-
-                    print(os.listdir(f'../convolution_mc/geometry_mc_order={int(order)}'))
-                    print(gt_path)
-                    exit()
-                    gt_np = np.load(gt_path, allow_pickle=True).item()['res']
-                    gt_crop = gt_np[start:-start, start:-start, start:-start]
-
-                    mse = ((gt_crop - clipped_pred) ** 2).mean()
-                    print(f"MSE (SDF): {mse:.8f}")
-                    mesh_name = f"{model_name}_order{order}_scale{np.round(1 / kernel_scale, 1)}.ply"
-                    try:
-                        save_mesh(clipped_pred, save_path, mesh_name)
-                        # save_mesh(clipped_pred, save_path, 'gt_' + mesh_name)
-                        print(f"Saved mesh: {mesh_name}")
-                    except:
-                        print("No surface found")
-                    summary_path = os.path.join(save_path, "results_summary.txt")
-                    with open(summary_path, "a") as f:
-                        f.write(f"{model_name}, kernel_scale={1 / kernel_scale:.2f}, order={order}, MSE={mse:.8f}\n")
-                    print(f"Appended results to {summary_path}")
-
-
-                # Videos
-                elif modality == 3:
-                    save_frames(output_tensor, save_path)
-
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     run_evaluation()

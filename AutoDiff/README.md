@@ -6,6 +6,7 @@ Experiments can be run across different dimensions (1D, 2D, 3D), signal types (a
 ---
 
 ## Scripts Overview
+For all scripts below, first `cd` into AutoDiff folder. The training scripts are in experiments subfolder.
 
 ### Training
 - `train_1d.py` — 1D analytic functions (Ackley, Gaussians, hyperrectangles).  
@@ -170,11 +171,33 @@ python train_3d.py \
   --order 1
 ```
 
+## Evaluation
 
-## Evaluating
+The repository provides two main evaluation types:
 
-The scripts `derivative_*.py` and `eval.py` are used for evaluation.  
-They do **not** take command-line arguments.  
+### Reconstruction (`derivative_*.py`)
 
-- If you have extracted the pretrained models correctly, you can run these scripts directly to reproduce results.  
-- If you are using your own trained models, update the corresponding file paths inside the scripts to point to your model checkpoints.  
+Use these scripts to evaluate derivative-based reconstructions:
+
+- `derivative_1d_motion_all.py` → motion signals  
+- `derivative_2d_all.py` → images  
+- `derivative_3d_all.py` → 3D geometry  
+- `derivative_*d_analytic.py` → analytic signals
+
+Run directly, e.g.:
+
+```bash
+python derivative_1d_motion_all.py
+python derivative_2d_all.py
+python derivative_3d_all.py
+```
+
+### Convolution (`eval.py`)
+
+Used to evaluate a particular model trained with AutoDiff for a convolution task.
+
+```bash
+python eval.py --model_path="../models/AutoDiff/1d/subject_0_order=2.pth"
+python eval.py --model_path="../models/AutoDiff/2d/0085_order=1.pth"
+python eval.py --model_path="../models/AutoDiff/3d/FAUST_tr_reg_077_order=1.pth" 
+```
