@@ -88,7 +88,7 @@ pip install pyopengl pyglet glfw click
 If you find this work useful, please cite:  
 
 ```bibtex
-@inproceedings{rubab2024antiderivatives,
+@inproceedings{rubab2025antiderivatives,
   title = {Learning Neural Antiderivatives},
   author = {Fizza Rubab and Ntumba Elie Nsampi and Martin Balint and Felix Mujkanovic and
             Hans-Peter Seidel and Tobias Ritschel and Thomas Leimk{\"u}hler},
